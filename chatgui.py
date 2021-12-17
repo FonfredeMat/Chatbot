@@ -1,15 +1,12 @@
-
-import nltk
+import os, time, random
+import nltk, json, pickle, numpy as np, gtts, vlc
 from nltk.stem import WordNetLemmatizer
-lemmatizer = WordNetLemmatizer()
-import pickle
-import numpy as np
-
 from keras.models import load_model
+
+replacements = [('Ã´', 'ô'),('Ã©','é')]
+lemmatizer = WordNetLemmatizer()
 model = load_model('chatbot_model.h5')
-import json
-import random
-intents = json.loads(open('intents.json').read())
+intents = json.loads(open('intents.json5').read())
 words = pickle.load(open('words.pkl','rb'))
 classes = pickle.load(open('classes.pkl','rb'))
 
@@ -45,6 +42,7 @@ def predict_class(sentence, model):
 def getResponse(ints, intents_json):
     tag = ints[0]['intent']
     list_of_intents = intents_json['intents']
+    result="ERROR_RESPONSE_BOT"
     for i in list_of_intents:
         if(i['tag']== tag):
             result = random.choice(i['responses'])
@@ -72,10 +70,32 @@ def send():
         ChatLog.config(foreground="#442265", font=("Verdana", 12 ))
 
         res = chatbot_response(msg)
+        res=get_accents(res)
+        message_to_audio(res)
         ChatLog.insert(END, "Bot: " + res + '\n\n')
+
 
         ChatLog.config(state=DISABLED)
         ChatLog.yview(END)
+
+def get_accents(u):
+    for a, b in replacements:
+        u = u.replace(a, b)
+    return u
+def message_to_audio(message):
+
+    tts = gtts.gTTS(message, lang="fr")
+    tts.save("message_vocal.mp3")
+    p=vlc.MediaPlayer("message_vocal.mp3")
+    p.play()
+    time.sleep(0.05)            #attente pour avoir la bonne taille
+    duration=p.get_length()/1000 #duration en s
+    time.sleep(duration)
+    p.release()
+    os.remove("message_vocal.mp3")
+
+
+
 
 
 base = Tk()

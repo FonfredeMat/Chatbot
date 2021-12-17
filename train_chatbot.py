@@ -1,22 +1,16 @@
-import nltk
-nltk.download('punkt')
-nltk.download('wordnet')
-from nltk.stem import WordNetLemmatizer
-lemmatizer = WordNetLemmatizer()
-import json
-import pickle
-
-import numpy as np
 from keras.models import Sequential
 from keras.layers import Dense, Activation, Dropout
 from tensorflow.keras.optimizers import SGD
-import random
+from nltk.stem import WordNetLemmatizer
+import json,pickle,nltk,random,os,numpy as np
 
+
+lemmatizer = WordNetLemmatizer()
 words=[]
 classes = []
 documents = []
 ignore_words = ['?', '!']
-data_file = open('intents.json').read()
+data_file = open('intents.json5').read()
 intents = json.loads(data_file)
 
 
