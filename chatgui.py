@@ -2,13 +2,17 @@ import os, time, random
 import nltk, json, pickle, numpy as np, gtts, vlc
 from nltk.stem import WordNetLemmatizer
 from keras.models import load_model
+import threading
 
+#GESTION DES ACCENTS
 replacements = [('Ã´', 'ô'),('Ã©','é')]
+
 lemmatizer = WordNetLemmatizer()
 model = load_model('chatbot_model.h5')
 intents = json.loads(open('intents.json5').read())
 words = pickle.load(open('words.pkl','rb'))
 classes = pickle.load(open('classes.pkl','rb'))
+
 
 
 def clean_up_sentence(sentence):
@@ -71,29 +75,40 @@ def send():
 
         res = chatbot_response(msg)
         res=get_accents(res)
-        message_to_audio(res)
         ChatLog.insert(END, "Bot: " + res + '\n\n')
 
 
         ChatLog.config(state=DISABLED)
         ChatLog.yview(END)
+        base.update()
+        thread_audio(res)
+
 
 def get_accents(u):
     for a, b in replacements:
         u = u.replace(a, b)
     return u
+
+
+    return False
+def thread_audio(message):
+    t=threading.Thread(target=message_to_audio,args=(message,))
+    t.start()
+
+
 def message_to_audio(message):
-
-    tts = gtts.gTTS(message, lang="fr")
-    tts.save("message_vocal.mp3")
-    p=vlc.MediaPlayer("message_vocal.mp3")
-    p.play()
-    time.sleep(0.05)            #attente pour avoir la bonne taille
-    duration=p.get_length()/1000 #duration en s
-    time.sleep(duration)
-    p.release()
-    os.remove("message_vocal.mp3")
-
+    try:
+        tts = gtts.gTTS(message, lang="fr")
+        tts.save("message_vocal.mp3")
+        p=vlc.MediaPlayer("message_vocal.mp3")
+        p.play()
+        time.sleep(0.05)            #attente pour avoir la bonne taille
+        duration=p.get_length()/1000 #duration en s
+        time.sleep(duration)
+        p.release()
+        os.remove("message_vocal.mp3")
+    except:
+        pass
 
 
 
